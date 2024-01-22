@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test API</title>
+</head>
+
+<body>
+    <h1><a href="https://developer.mozilla.org/fr/docs/Web/API/Navigator">Api Navigator</a></h1>
+    <h2>Géolocalisation</h2>
+    <button id="find-me">find Me</button>
+    <p id="status"></p>
+    <a id="map-link" target="_blank"></a>
+    <hr>
+    <h2>Bluetooth</h2>
+    <p>
+        <a href="https://googlechrome.github.io/samples/web-bluetooth/device-info.html?allDevices=true">
+            Exemple de connection Bluetooth.
+        </a>
+    </p>
+    <hr>
+<h2>Photo et vidéo</h2>
+<a href="https://googlechrome.github.io/samples/image-capture/grab-frame-take-photo.html">
+Prendre une photo ou vidéo
+</a>
+    <hr>
+    <h2>notification push</h2>
+    <a href="https://mdn.github.io/dom-examples/to-do-notifications/">Exemple</a>
+    <h2>Batterie</h2>
+    <div id="charging">(charging state unknown)</div>
+    <div id="level">(battery level unknown)</div>
+    <div id="dischargingTime">(discharging time unknown)</div>
+    <hr>
+    <h2>Clipboard</h2>
+    <a href="#" id="clip">Copier le text</a>
+    <br>
+    <textarea id="colle"></textarea>
+    <script>
+        // espace de la mémoire du matériel
+        const memory = navigator.deviceMemory;
+        console.log(`This device has at least ${memory}GiB of RAM.`);
+
+        console.log(navigator.cookieEnabled);
+        if (!navigator.cookieEnabled) {
+            // Ce navigateur ne supporte pas ou bloque les cookies.
+        }
+
+        // date au format en fonction des préférences utilisateurs
+        const date = new Date("2023-05-24");
+        const formattedDate = new Intl.DateTimeFormat(navigator.language).format(date);
+        console.info(formattedDate);
+
+
+        // géolocalisation
+        var geo = navigator.geolocation;
+        console.log(geo);
+        function geoFindMe() {
+            const status = document.querySelector("#status");
+            const mapLink = document.querySelector("#map-link");
+
+            mapLink.href = "";
+            mapLink.textContent = "";
+
+            function success(position) {
+                const latitude = position.coords.latitude;
+                const longitude = position.coords.longitude;
+
+                status.textContent = "";
+                mapLink.href = `https://www.openstreetmap.org/#map=18/${latitude}/${longitude}`;
+                mapLink.textContent = `Latitude: ${latitude} °, Longitude: ${longitude} °`;
+            }
+
+            function error() {
+                status.textContent = "Unable to retrieve your location";
+            }
+
+            if (!navigator.geolocation) {
+                status.textContent = "Geolocation is not supported by your browser";
+            } else {
+                status.textContent = "Locating…";
+                navigator.geolocation.getCurrentPosition(success, error);
+            }
+        }
+
+        document.querySelector("#find-me").addEventListener("click", geoFindMe);
+
+        // Batterie
+        window.onload = function () {
+            function updateBatteryStatus(battery) {
+                document.querySelector('#charging').textContent = battery.charging ? 'charging' : 'not charging';
+                document.querySelector('#level').textContent = battery.level;
+                document.querySelector('#dischargingTime').textContent = battery.dischargingTime / 60;
+            }
+
+            navigator.getBattery().then(function (battery) {
+                // Update the battery status initially when the promise resolves ...
+                updateBatteryStatus(battery);
+
+                // .. and for any subsequent updates.
+                battery.onchargingchange = function () {
+                    updateBatteryStatus(battery);
+                };
+
+                battery.onlevelchange = function () {
+                    updateBatteryStatus(battery);
+                };
+
+                battery.ondischargingtimechange = function () {
+                    updateBatteryStatus(battery);
+                };
+            });
+
+            //clipboard 
+            const writeTextInClipboard = () => {
+                navigator.clipboard.writeText('Hello, world!')
+                    .then(() => {
+                        console.log('Text copied to clipboard');
+                    })
+                    .catch(err => {
+                        console.error('Failed to copy text: ', err);
+                    });
+            };
+
+            document.getElementById('clip').addEventListener('click', writeTextInClipboard);
+        };
+    </script>
+</body>
+
+</html>
